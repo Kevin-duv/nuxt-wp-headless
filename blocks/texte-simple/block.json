@@ -1,0 +1,16 @@
+{
+    "$schema": "https://schemas.wp.org/trunk/block.json",
+    "apiVersion": 2,
+    "name": "acf/texte-simple",
+    "title": "Texte simple",
+    "description": "Un bloc ACF retournant du JSON pour Nuxt.js",
+    "category": "common",
+    "icon": "text",
+    "keywords": [
+        "texte",
+        "paragraph"
+    ],
+    "supports": {
+        "html": false
+    }
+}
