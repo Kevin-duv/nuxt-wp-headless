@@ -139,6 +139,79 @@ function add_image_sizes_to_api($response, $attachment, $request) {
 add_filter('rest_prepare_attachment', 'add_image_sizes_to_api', 10, 3);
 
 
-// Supprimer tout le code de l'endpoint personnalisé ci-dessous
-// (supprimer les fonctions register_rest_route, get_all_custom_posts, 
-// get_single_custom_post, extract_acf_blocks et format_post_data)
+
+
+function cpt_init() {
+  $labels = array(
+      'name' => 'Products',
+      'singular_name' => 'Product',
+      'menu_name' => 'Products',
+      'add_new' => 'Add New Product', // Libellé pour ajouter une nouvelle ressource
+      'add_new_item' => 'Add New Product',
+      'edit_item' => 'Edit Product',
+      'new_item' => 'New Product',
+      'view_item' => 'View Product',
+      'search_items' => 'Search Products',
+      'not_found' => 'No Products found',
+      'not_found_in_trash' => 'No Products found in trash',
+      'parent_item_colon' => 'Parent Product:',
+      'all_items' => 'All Products',
+      'archives' => 'Product Archives',
+      'insert_into_item' => 'Insert into Product',
+      'uploaded_to_this_item' => 'Uploaded to this Product',
+      'filter_items_list' => 'Filter Products list',
+      'items_list_navigation' => 'Products list navigation',
+      'items_list' => 'Products list'
+  );
+
+    $args = array(
+        'label' => 'Products',
+        'public' => true,
+        'show_in_rest' => true,
+        'show_ui' => true,
+        'has_archive'  => true,
+        'capability_type' => 'post',
+        'hierarchical' => false,
+        'rewrite' => array('slug' => 'products'),
+        'query_var' => true,
+        'menu_icon' => 'dashicons-testimonial',
+        'supports' => array(
+            'title',
+            'editor',
+            'thumbnail',
+            'trackbacks',
+            'custom-fields',
+            'comments' => false,
+            'revisions',
+            'page-attributes',),
+            'labels' => $labels,
+        );
+    register_post_type( 'products', $args );
+}
+add_action( 'init', 'cpt_init' );
+
+
+
+
+   // Ajouter les URLs WebP à l'API REST
+   function add_webp_urls_to_api($response, $attachment, $request) {
+     $data = $response->get_data();
+     
+     if (isset($data['media_details']) && isset($data['media_details']['sizes'])) {
+       foreach ($data['media_details']['sizes'] as $size => $info) {
+         // Ajouter une URL WebP pour chaque taille
+         $original_url = $info['source_url'];
+         $webp_url = str_replace(['.jpg', '.jpeg', '.png'], '.webp', $original_url);
+         
+         // Vérifier si le fichier WebP existe
+         $webp_path = str_replace(home_url(), ABSPATH, $webp_url);
+         if (file_exists($webp_path)) {
+           $data['media_details']['sizes'][$size]['webp_url'] = $webp_url;
+         }
+       }
+       $response->set_data($data);
+     }
+     
+     return $response;
+   }
+   add_filter('rest_prepare_attachment', 'add_webp_urls_to_api', 10, 3);

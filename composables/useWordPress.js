@@ -92,11 +92,46 @@ export function useWordPress() {
         return data.value?.[0] || null;
     }
 
+    // Fonction pour récupérer les produits
+    async function fetchProducts(params = {}) {
+        const queryParams = new URLSearchParams();
+        Object.entries(params).forEach(([key, value]) => {
+            queryParams.append(key, value);
+        });
+        
+        const { data, error } = await useFetch(`/api/wordpress/products?${queryParams.toString()}`, {
+            key: `products-${JSON.stringify(params)}`,
+            server: true,
+            cache: true
+        });
+        
+        if (error.value) {
+            console.error('Erreur de récupération des produits:', error.value);
+            return [];
+        }
+        
+        return data.value || [];
+    }
+
+    // Fonction pour récupérer un produit par slug
+    async function fetchProductBySlug(slug) {
+        const { data } = await useFetch(`/api/wordpress/products`, {
+            key: `product-${slug}`,
+            params: { slug, _embed: true },
+            server: true,
+            cache: true
+        });
+        
+        return data.value?.[0] || null;
+    }
+
     return {
         getFeaturedImage,
         getPostExcerpt,
         fetchPosts,
         fetchPostBySlug,
+        fetchProducts,
+        fetchProductBySlug,
         // Vous pourrez ajouter d'autres fonctions utiles ici
     };
 }

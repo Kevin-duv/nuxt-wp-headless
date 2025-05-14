@@ -90,9 +90,11 @@
 <script setup>
 import { useRuntimeConfig, useRoute, createError } from '#imports'
 import { computed, watch } from 'vue'
+import { useWordPress } from '~/composables/useWordPress'
 
 const config = useRuntimeConfig()
 const route = useRoute()
+const { getFeaturedImage, fetchPostBySlug } = useWordPress()
 
 // Fonction pour formater la date avec protection
 function formatDate(dateString) {
@@ -121,12 +123,7 @@ const { data: postsData, pending, error } = await useFetch(
 )
 
 // Extraire le premier article des résultats
-const currentPost = computed(() => {
-  if (Array.isArray(postsData.value) && postsData.value.length > 0) {
-    return postsData.value[0];
-  }
-  return null;
-});
+const currentPost = await fetchPostBySlug(route.params.slug)
 
 // Récupérer tous les posts pour la navigation avec cache
 const { data: allPostsData } = await useFetch(

@@ -2,22 +2,18 @@
   <div>
     <Breadcrumb />
     <div class="py-8">
-      <h1 class="text-3xl font-bold mb-8">Tous les articles</h1>
+      <h1 class="text-3xl font-bold mb-8">Tous les produits</h1>
       <div v-if="sortedPosts.length" class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <article v-for="post in sortedPosts" :key="post.id" class="border rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
           <NuxtLink :to="`/articles/${post.slug}`" class="block">
             <!-- Image à la une avec placeholder en attendant le chargement -->
             <div class="aspect-video relative bg-gray-200 overflow-hidden">
-            <OptimizedImage 
-              v-if="getFeaturedImage(post)" 
-              :src="getFeaturedImage(post)" 
-              :alt="post.title.rendered" 
-              :width="600" 
-              :height="400" 
-              class="w-full h-full object-cover transition-transform hover:scale-105"
+              <img 
+                v-if="getFeaturedImage(post)" 
+                :src="getFeaturedImage(post)" 
+                :alt="post.title?.rendered"
+                class="w-full h-full object-cover transition-transform hover:scale-105"
               />
-           
-           
               <div v-else class="flex items-center justify-center h-full text-gray-400">
                 <span>Pas d'image</span>
               </div>
@@ -102,7 +98,7 @@ function formatDate(dateString) {
 
 // Assurez-vous que votre appel API retourne bien un tableau
 const { data: postsData, pending, error: fetchError } = await useFetch(
-  () => `/api/wordpress/posts`,
+  () => `/api/wordpress/products`,
   {
     params: { per_page: 12, _embed: true },
     key: 'posts-list',

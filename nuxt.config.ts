@@ -8,7 +8,8 @@ export default defineNuxtConfig({
   // Modules
   modules: [
     '@nuxtjs/tailwindcss',
-    '@nuxtjs/critters'
+    '@nuxtjs/critters',
+    '@nuxt/image'  // Ajoutez cette ligne
   ],
 
   // Configuration des transitions
@@ -51,5 +52,11 @@ export default defineNuxtConfig({
             }
           }
     }
+  },
+
+  image: {
+    provider: 'ipx',
+    format: ['webp']
+
   }
 })
