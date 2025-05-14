@@ -15,16 +15,16 @@
     
     <!-- Ajouter un état de chargement -->
     <div v-if="pending" class="prose mx-auto py-8 text-center">
-      Chargement de l'article...
+      Chargement de l'article..
     </div>
     
-    <div v-if="error" class="bg-red-100 p-4 mb-4 rounded">
+    <div v-if="error" class="w-[70%] mx-auto bg-red-100 p-4 mb-4 rounded">
       <h3 class="font-bold text-red-700">Erreur API:</h3>
       <p>{{ error }}</p>
     </div>
     
     <!-- N'afficher l'article que lorsqu'il est complètement chargé -->
-    <article v-else-if="currentPost" class="prose mx-auto py-8">
+    <article v-else-if="currentPost" class="w-[80%] mx-auto py-8">
       <!-- Titre et contenu avec vérifications optionnelles -->
       <h1 v-if="currentPost.title?.rendered" v-html="currentPost.title.rendered" />
       
@@ -37,13 +37,24 @@
           {{ currentPost.acf.temps_de_lecture }} min de lecture
         </span>
       </div>
-
+     
+      <!-- Rendu des blocs flexibles ACF -->
+      <FlexibleRenderer 
+        :blocks="currentPost?.acf?.flexible || []" 
+      />
       <!-- À la place du contenu rendu -->
       <BlockRenderer 
         :blocks="currentPost?.blocks || []" 
         :acf_blocks="currentPost?.acf_blocks || []"
         :content="currentPost?.content?.rendered || ''"
       />
+ 
+
+      <!-- Pour déboguer les données ACF -->
+      <div class="bg-gray-100 p-4 mb-4 rounded hidden ">
+        <h3 class="font-bold mb-2">Données ACF Flexible :</h3>
+        <p class="text-xs overflow-auto max-h-60">{{ JSON.stringify(currentPost?.acf?.flexible, null, 2) }}</p>
+      </div>
 
       <!-- Navigation entre articles avec vérifications -->
       <div v-if="prevPost || nextPost" class="post-navigation mt-8 flex justify-between">
@@ -99,9 +110,14 @@ function formatDate(dateString) {
   }
 }
 
-// Utiliser l'API WordPress standard
+// Utiliser le proxy avec cache pour l'article spécifique
 const { data: postsData, pending, error } = await useFetch(
-  () => `${config.public.wordpressApi}/posts?slug=${route.params.slug}`
+  () => `/api/wordpress/posts`,
+  {
+    params: { slug: route.params.slug },
+    key: `post-${route.params.slug}`,
+    cache: true
+  }
 )
 
 // Extraire le premier article des résultats
@@ -112,9 +128,14 @@ const currentPost = computed(() => {
   return null;
 });
 
-// Récupérer tous les posts pour la navigation
+// Récupérer tous les posts pour la navigation avec cache
 const { data: allPostsData } = await useFetch(
-  () => `${config.public.wordpressApi}/posts?per_page=100`
+  () => `/api/wordpress/posts`, 
+  {
+    params: { per_page: 100 },
+    key: 'all-posts',
+    cache: true
+  }
 )
 
 // Sécurisation des données pour tous les posts
@@ -148,6 +169,23 @@ watch(currentPost, (newPost) => {
     useYoastSeo(newPost)
   }
 }, { immediate: true });
+
+// Mise à jour de la fonction getMediaById pour utiliser le cache
+async function getMediaById(id) {
+  try {
+    const { data } = await useFetch(
+      `/api/wordpress/media/${id}`,
+      {
+        key: `media-${id}`,
+        cache: true
+      }
+    );
+    return data.value;
+  } catch (error) {
+    console.error(`Erreur lors de la récupération du média ${id}:`, error);
+    return null;
+  }
+}
 
 definePageMeta({
   pageTransition: {

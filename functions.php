@@ -94,6 +94,51 @@ function add_blocks_to_posts($data, $post, $context) {
 }
 add_filter('rest_prepare_post', 'add_blocks_to_posts', 10, 3);
 
+
+
+
+
+// Activer le support des images à la une (thumbnails/featured images)
+function theme_setup() {
+    // Ajouter le support des images à la une
+    add_theme_support('post-thumbnails');
+    
+    // Définir des tailles d'images personnalisées (optionnel)
+    add_image_size('card-thumbnail', 600, 400, true); // Taille optimisée pour les cartes d'articles
+    add_image_size('featured-large', 1200, 800, true); // Taille pour les grandes images à la une
+}
+add_action('after_setup_theme', 'theme_setup');
+
+
+
+
+// Ajouter les tailles d'images personnalisées à l'API REST
+function add_image_sizes_to_api($response, $attachment, $request) {
+    $data = $response->get_data();
+    
+    // Vérifier si l'on a des tailles d'images
+    if (isset($data['media_details']) && isset($data['media_details']['sizes'])) {
+        // Ajouter les URLs pour nos tailles personnalisées
+        $sizes = $data['media_details']['sizes'];
+        
+        if (isset($sizes['card-thumbnail'])) {
+            $data['media_details']['sizes']['card-thumbnail']['source_url'] = 
+                wp_get_attachment_image_url($attachment->ID, 'card-thumbnail');
+        }
+        
+        if (isset($sizes['featured-large'])) {
+            $data['media_details']['sizes']['featured-large']['source_url'] = 
+                wp_get_attachment_image_url($attachment->ID, 'featured-large');
+        }
+        
+        $response->set_data($data);
+    }
+    
+    return $response;
+}
+add_filter('rest_prepare_attachment', 'add_image_sizes_to_api', 10, 3);
+
+
 // Supprimer tout le code de l'endpoint personnalisé ci-dessous
 // (supprimer les fonctions register_rest_route, get_all_custom_posts, 
 // get_single_custom_post, extract_acf_blocks et format_post_data)
