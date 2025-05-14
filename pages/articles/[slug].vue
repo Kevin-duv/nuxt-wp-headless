@@ -94,7 +94,7 @@ import { useWordPress } from '~/composables/useWordPress'
 
 const config = useRuntimeConfig()
 const route = useRoute()
-const { getFeaturedImage, fetchPostBySlug } = useWordPress()
+const { getFeaturedImage, fetchPostBySlug, fetchPosts } = useWordPress()
 
 // Fonction pour formater la date avec protection
 function formatDate(dateString) {
@@ -122,41 +122,25 @@ const { data: postsData, pending, error } = await useFetch(
   }
 )
 
-// Extraire le premier article des résultats
+// Récupérer le post actuel
 const currentPost = await fetchPostBySlug(route.params.slug)
 
-// Récupérer tous les posts pour la navigation avec cache
-const { data: allPostsData } = await useFetch(
-  () => `/api/wordpress/posts`, 
-  {
-    params: { per_page: 100 },
-    key: 'all-posts',
-    cache: true
-  }
-)
+// Récupérer tous les posts pour la navigation
+const allPosts = await fetchPosts({ per_page: 100 })
 
-// Sécurisation des données pour tous les posts
-const allPosts = computed(() => {
-  if (Array.isArray(allPostsData.value)) {
-    return allPostsData.value;
-  }
-  return [];
-});
-
-// Trouver la position actuelle
+// Trouver l'index du post actuel
 const currentIndex = computed(() => {
-  if (!currentPost.value?.slug) return -1;
-  return allPosts.value.findIndex(p => p.slug === currentPost.value.slug);
+  if (!currentPost?.slug) return -1;
+  return allPosts.findIndex(p => p.slug === currentPost.slug);
 });
 
-// Articles précédent et suivant
+// Calculer les posts précédent/suivant
 const prevPost = computed(() => 
-  currentIndex.value > 0 ? allPosts.value[currentIndex.value - 1] : null
+  currentIndex.value > 0 ? allPosts[currentIndex.value - 1] : null
 );
-
 const nextPost = computed(() => 
-  currentIndex.value >= 0 && currentIndex.value < allPosts.value.length - 1 
-    ? allPosts.value[currentIndex.value + 1] 
+  currentIndex.value >= 0 && currentIndex.value < allPosts.length - 1 
+    ? allPosts[currentIndex.value + 1] 
     : null
 );
 
